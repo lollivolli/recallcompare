@@ -1,0 +1,727 @@
+<title>จับคู่สินค้าเรียกคืน</title>
+<style>
+:root{
+  --bg:#F7F5F0;
+  --surface:#FFFFFF;
+  --surface-2:#F0ECE3;
+  --text:#20241F;
+  --muted:#686F63;
+  --border:#DFD9C9;
+  --accent:#2B5D5E;
+  --accent-strong:#1D4344;
+  --accent-soft:#DCE9E7;
+  --danger:#AD4326;
+  --danger-soft:#F6E2D8;
+  --warn:#B4801F;
+  --warn-soft:#F5EAD2;
+  --success:#3E7A50;
+  --success-soft:#DEECDF;
+  --shadow: 0 1px 2px rgba(32,36,31,0.06), 0 6px 20px -8px rgba(32,36,31,0.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14181A;
+    --surface:#1B2123;
+    --surface-2:#222A2C;
+    --text:#EAE7DE;
+    --muted:#9BA39B;
+    --border:#2E3638;
+    --accent:#68B6AC;
+    --accent-strong:#8FCFC6;
+    --accent-soft:#1E3532;
+    --danger:#E28065;
+    --danger-soft:#3A2620;
+    --warn:#E0B457;
+    --warn-soft:#3A3120;
+    --success:#7FC194;
+    --success-soft:#1F3324;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14181A;
+  --surface:#1B2123;
+  --surface-2:#222A2C;
+  --text:#EAE7DE;
+  --muted:#9BA39B;
+  --border:#2E3638;
+  --accent:#68B6AC;
+  --accent-strong:#8FCFC6;
+  --accent-soft:#1E3532;
+  --danger:#E28065;
+  --danger-soft:#3A2620;
+  --warn:#E0B457;
+  --warn-soft:#3A3120;
+  --success:#7FC194;
+  --success-soft:#1F3324;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -8px rgba(0,0,0,0.45);
+}
+
+*{box-sizing:border-box;}
+html{color-scheme:light dark;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Noto Sans Thai","IBM Plex Sans",system-ui,sans-serif;
+  line-height:1.5;
+}
+.mono{font-family:"IBM Plex Mono","Noto Sans Thai",monospace;font-variant-numeric:tabular-nums;}
+
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+header.top h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:-0.01em;text-wrap:balance;}
+header.top p{margin:0;color:var(--muted);font-size:0.92rem;max-width:56ch;}
+.badge-flow{display:flex;gap:6px;font-size:0.78rem;color:var(--muted);flex-wrap:wrap;}
+.badge-flow span{background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:4px 12px;}
+.badge-flow span.active{background:var(--accent-soft);color:var(--accent-strong);border-color:transparent;font-weight:600;}
+
+.step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--shadow);}
+.step h2{font-size:1.02rem;margin:0 0 4px;display:flex;align-items:center;gap:10px;}
+.step h2 .num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;flex-shrink:0;}
+.step > .hint{color:var(--muted);font-size:0.86rem;margin:0 0 16px 34px;}
+
+.dropzones{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:760px){.dropzones{grid-template-columns:1fr;}}
+
+.drop{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s, background .15s;background:var(--surface-2);position:relative;}
+.drop:hover,.drop.drag{border-color:var(--accent);background:var(--accent-soft);}
+.drop input{display:none;}
+.drop .icon{font-size:1.5rem;margin-bottom:6px;opacity:0.7;}
+.drop .label{font-weight:600;font-size:0.94rem;}
+.drop .sub{color:var(--muted);font-size:0.8rem;margin-top:3px;}
+.drop .filename{margin-top:10px;font-size:0.82rem;color:var(--accent-strong);font-weight:600;word-break:break-all;}
+.drop .stats{margin-top:4px;font-size:0.78rem;color:var(--muted);}
+
+.mapgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;}
+@media (max-width:760px){.mapgrid{grid-template-columns:1fr;}}
+.mapcard{border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--surface-2);}
+.mapcard h3{font-size:0.86rem;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+.field-row{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:8px;margin-bottom:8px;}
+.field-row label{font-size:0.82rem;color:var(--muted);}
+select,.btn,input[type=text]{
+  font-family:inherit;font-size:0.86rem;padding:7px 10px;border-radius:7px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+}
+select{width:100%;}
+.sheetpick{margin-top:8px;font-size:0.8rem;display:flex;gap:8px;align-items:center;color:var(--muted);}
+
+.actions{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;}
+.btn{cursor:pointer;font-weight:600;transition:filter .15s, transform .05s;}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;padding:10px 20px;font-size:0.92rem;}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;filter:none;}
+.btn-ghost{background:transparent;color:var(--muted);}
+.btn-ghost:hover{color:var(--text);border-color:var(--text);}
+.matchmode{display:flex;gap:14px;align-items:center;font-size:0.86rem;color:var(--muted);margin-left:auto;flex-wrap:wrap;}
+.matchmode label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+@media (max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);}
+.stat .n{font-size:1.6rem;font-weight:700;font-family:"IBM Plex Mono",monospace;line-height:1.1;}
+.stat .l{font-size:0.78rem;color:var(--muted);margin-top:4px;}
+.stat.match .n{color:var(--success);}
+.stat.miss .n{color:var(--muted);}
+.stat.expired .n{color:var(--danger);}
+.stat.soon .n{color:var(--warn);}
+
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.toolbar input[type=text]{flex:1;min-width:180px;}
+.filters{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{border:1px solid var(--border);background:var(--surface-2);border-radius:999px;padding:6px 13px;font-size:0.8rem;cursor:pointer;color:var(--muted);font-weight:600;}
+.chip.on{background:var(--accent-soft);color:var(--accent-strong);border-color:transparent;}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);}
+table{border-collapse:collapse;width:100%;font-size:0.84rem;min-width:900px;}
+thead th{position:sticky;top:0;background:var(--surface-2);text-align:left;padding:10px 12px;font-size:0.74rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+td.code{font-family:"IBM Plex Mono",monospace;}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:0.72rem;font-weight:700;white-space:nowrap;}
+.pill.expired{background:var(--danger-soft);color:var(--danger);}
+.pill.soon{background:var(--warn-soft);color:var(--warn);}
+.pill.ok{background:var(--success-soft);color:var(--success);}
+.rowbar{width:4px;display:inline-block;height:14px;border-radius:2px;margin-right:8px;vertical-align:-2px;}
+
+.empty{color:var(--muted);font-size:0.86rem;text-align:center;padding:30px 10px;}
+.footer-note{color:var(--muted);font-size:0.78rem;margin-top:10px;}
+.error-box{background:var(--danger-soft);color:var(--danger);border-radius:8px;padding:10px 14px;font-size:0.84rem;margin-top:10px;}
+a.download{display:inline-flex;align-items:center;gap:6px;text-decoration:none;}
+
+::selection{background:var(--accent-soft);}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>จับคู่สินค้าเรียกคืน กับสต็อก EXP สาขา</h1>
+      <p>อัปโหลดไฟล์รายการสินค้าเรียกคืนจาก Buyer และไฟล์วันหมดอายุของสาขา ระบบจะจับคู่ด้วยรหัสสินค้า + วันหมดอายุให้อัตโนมัติ แม้หัวคอลัมน์ของแต่ละสาขาจะไม่เหมือนกัน</p>
+    </div>
+    <div class="badge-flow">
+      <span id="bf1" class="active">1. อัปโหลดไฟล์</span>
+      <span id="bf2">2. ตรวจคอลัมน์</span>
+      <span id="bf3">3. ผลการจับคู่</span>
+    </div>
+  </header>
+
+  <!-- STEP 1: UPLOAD -->
+  <div class="step">
+    <h2><span class="num">1</span>อัปโหลดไฟล์ทั้งสอง</h2>
+    <p class="hint">รองรับ .xlsx .xls .xlsm .ods .csv — เลือกได้ทั้งลากวางหรือคลิกเพื่อเลือกไฟล์</p>
+    <div class="dropzones">
+      <div class="drop" id="dropRecall">
+        <input type="file" id="fileRecall" accept=".xlsx,.xls,.xlsm,.ods,.csv">
+        <div class="icon">📋</div>
+        <div class="label">ไฟล์สินค้าเรียกคืน (Buyer)</div>
+        <div class="sub">เช่น ITEMID, ITEMNAME, EXPDATE, INVENTBATCHID</div>
+        <div class="filename" id="nameRecall"></div>
+        <div class="stats" id="statsRecall"></div>
+      </div>
+      <div class="drop" id="dropBranch">
+        <input type="file" id="fileBranch" accept=".xlsx,.xls,.xlsm,.ods,.csv">
+        <div class="icon">🏬</div>
+        <div class="label">ไฟล์ EXP สต็อกสาขา</div>
+        <div class="sub">คอลัมน์ของแต่ละสาขาอาจไม่ตรงกัน — ปรับได้ในขั้นถัดไป</div>
+        <div class="filename" id="nameBranch"></div>
+        <div class="stats" id="statsBranch"></div>
+      </div>
+    </div>
+    <div id="uploadError"></div>
+  </div>
+
+  <!-- STEP 2: MAPPING -->
+  <div class="step" id="stepMap" style="display:none;">
+    <h2><span class="num">2</span>ตรวจสอบคอลัมน์ที่ระบบเดาให้</h2>
+    <p class="hint">ระบบพยายามเดาคอลัมน์ "รหัสสินค้า" และ "วันหมดอายุ" จากชื่อหัวตารางให้อัตโนมัติ — โปรดตรวจสอบและแก้ไขหากไม่ตรง</p>
+    <div class="mapgrid">
+      <div class="mapcard">
+        <h3 id="mapTitleRecall">ไฟล์เรียกคืน</h3>
+        <div class="field-row"><label>รหัสสินค้า</label><select id="mapRecallCode"></select></div>
+        <div class="field-row"><label>ชื่อสินค้า</label><select id="mapRecallName"></select></div>
+        <div class="field-row"><label>วันหมดอายุ</label><select id="mapRecallExp"></select></div>
+        <div class="field-row"><label>เลขล็อต</label><select id="mapRecallBatch"></select></div>
+        <div class="sheetpick" id="sheetPickRecall"></div>
+      </div>
+      <div class="mapcard">
+        <h3 id="mapTitleBranch">ไฟล์สาขา</h3>
+        <div class="field-row"><label>รหัสสินค้า</label><select id="mapBranchCode"></select></div>
+        <div class="field-row"><label>ชื่อสินค้า</label><select id="mapBranchName"></select></div>
+        <div class="field-row"><label>วันหมดอายุ</label><select id="mapBranchExp"></select></div>
+        <div class="field-row"><label>จำนวน</label><select id="mapBranchQty"></select></div>
+        <div class="sheetpick" id="sheetPickBranch"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btnMatch" disabled>จับคู่ข้อมูล →</button>
+      <div class="matchmode">
+        <span>เกณฑ์การจับคู่:</span>
+        <label><input type="radio" name="mm" value="code_exp" checked> รหัส + วันหมดอายุตรงกัน</label>
+        <label><input type="radio" name="mm" value="code_only"> รหัสสินค้าอย่างเดียว</label>
+      </div>
+    </div>
+    <div id="matchError"></div>
+  </div>
+
+  <!-- STEP 3: RESULTS -->
+  <div class="step" id="stepResults" style="display:none;">
+    <h2><span class="num">3</span>ผลการจับคู่</h2>
+    <div class="stats" id="statBoxes"></div>
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="ค้นหารหัสหรือชื่อสินค้า...">
+      <div class="filters" id="filterChips">
+        <span class="chip on" data-f="all">ทั้งหมด</span>
+        <span class="chip" data-f="matched">พบในสาขา</span>
+        <span class="chip" data-f="expired">หมดอายุแล้ว</span>
+        <span class="chip" data-f="soon">ใกล้หมดอายุ (≤60 วัน)</span>
+        <span class="chip" data-f="unmatched">ไม่พบในสาขา</span>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table id="resultsTable">
+        <thead><tr id="resultsHead"></tr></thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btnExport">⬇ ดาวน์โหลดผลลัพธ์ (.xlsx)</button>
+      <button class="btn btn-ghost" id="btnReset">เริ่มใหม่</button>
+    </div>
+    <p class="footer-note">"หมดอายุแล้ว" คำนวณเทียบกับวันที่ปัจจุบัน · การจับคู่ทำในเบราว์เซอร์ของคุณทั้งหมด ไม่มีการอัปโหลดข้อมูลออกไปที่อื่น</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  var state = {
+    recall: null,  // {headers, rows, sheetNames, sheet}
+    branch: null,
+    matches: [],   // computed rows
+    filter: 'all',
+    search: ''
+  };
+
+  var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+  // ---------- helpers: date parsing ----------
+  function excelSerialToDate(n){
+    // Excel serial date (1900 system), handles the 1900 leap bug like sheetjs does
+    var utc_days = Math.floor(n - 25569);
+    var utc_value = utc_days * 86400;
+    var d = new Date(utc_value * 1000);
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+
+  function toGregorianYear(y){
+    if(y > 2400) return y - 543; // Buddhist Era -> CE
+    if(y < 100) return y < 50 ? 2000+y : 1900+y; // 2-digit year
+    return y;
+  }
+
+  function parseDateValue(val){
+    if(val === null || val === undefined || val === '') return null;
+    if(val instanceof Date && !isNaN(val)) {
+      return new Date(val.getFullYear(), val.getMonth(), val.getDate());
+    }
+    if(typeof val === 'number' && isFinite(val)){
+      if(val > 20000 && val < 80000){ // plausible excel serial range
+        try{ return excelSerialToDate(val); }catch(e){}
+      }
+    }
+    var s = String(val).trim();
+    if(!s) return null;
+
+    // yyyy-mm-dd or yyyy/mm/dd
+    var m = s.match(/^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})/);
+    if(m){
+      var y=toGregorianYear(parseInt(m[1],10)), mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
+      var dt = new Date(y,mo,d);
+      if(!isNaN(dt)) return dt;
+    }
+    // d/m/yyyy or d/m/yy or d-m-yyyy
+    m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+    if(m){
+      var d2=parseInt(m[1],10), mo2=parseInt(m[2],10)-1, y2=toGregorianYear(parseInt(m[3],10));
+      var dt2 = new Date(y2,mo2,d2);
+      if(!isNaN(dt2)) return dt2;
+    }
+    // pure yyyymmdd (8 digits) - sometimes batch-like, only if plausible
+    m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if(m){
+      var y3=toGregorianYear(parseInt(m[1],10)), mo3=parseInt(m[2],10)-1, d3=parseInt(m[3],10);
+      if(mo3>=0 && mo3<=11 && d3>=1 && d3<=31){
+        var dt3=new Date(y3,mo3,d3);
+        if(!isNaN(dt3)) return dt3;
+      }
+    }
+    return null;
+  }
+
+  function fmtDate(d){
+    if(!d) return '—';
+    var dd = String(d.getDate()).padStart(2,'0');
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    return dd+'/'+mm+'/'+d.getFullYear();
+  }
+
+  function daysUntil(d){
+    if(!d) return null;
+    return Math.round((d - TODAY) / 86400000);
+  }
+
+  // ---------- helpers: code normalization ----------
+  function normCode(v){
+    if(v === null || v === undefined) return '';
+    var s = String(v).trim();
+    s = s.replace(/\.0$/, ''); // stray excel float artifact
+    var stripped = s.replace(/^0+(?=\d)/, ''); // strip leading zeros for numeric-ish codes
+    return stripped.toLowerCase();
+  }
+
+  // ---------- header auto-guess ----------
+  var CODE_HINTS = ['itemid','รหัสสินค้า','รหัส','item code','itemcode','sku','barcode','code'];
+  var NAME_HINTS = ['itemname','รายการสินค้า','ชื่อสินค้า','ชื่อ','name','description','รายการ'];
+  var EXP_HINTS  = ['expdate','วันหมดอายุ','วันที่หมดอายุ','exp date','exp','วันหมดอายุ.','expire'];
+  var BATCH_HINTS= ['inventbatchid','เลขล็อต','ล็อต','batch','lot'];
+  var QTY_HINTS  = ['จำนวน','qty','quantity','จำนวนคงเหลือ'];
+
+  function guessColumn(headers, hints){
+    var low = headers.map(function(h){ return String(h||'').toLowerCase().trim(); });
+    // exact match first
+    for(var i=0;i<hints.length;i++){
+      var idx = low.indexOf(hints[i]);
+      if(idx>=0) return idx;
+    }
+    // contains match
+    for(var j=0;j<low.length;j++){
+      for(var k=0;k<hints.length;k++){
+        if(hints[k].length>=3 && low[j].indexOf(hints[k])>=0) return j;
+      }
+    }
+    return -1;
+  }
+
+  // ---------- file parsing ----------
+  function readWorkbook(file, cb){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var data = new Uint8Array(e.target.result);
+        var wb = XLSX.read(data, {type:'array', cellDates:true});
+        cb(null, wb);
+      }catch(err){ cb(err); }
+    };
+    reader.onerror = function(){ cb(new Error('อ่านไฟล์ไม่สำเร็จ')); };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function sheetToRows(wb, sheetName){
+    var ws = wb.Sheets[sheetName];
+    var json = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true, blankrows:false});
+    // find header row: first row with >=2 non-empty cells
+    var headerRowIdx = 0;
+    for(var i=0;i<Math.min(json.length,15);i++){
+      var nonEmpty = json[i].filter(function(c){ return String(c).trim()!==''; }).length;
+      if(nonEmpty>=2){ headerRowIdx = i; break; }
+    }
+    var headers = json[headerRowIdx].map(function(h,i){ return String(h).trim() || ('คอลัมน์ '+(i+1)); });
+    var rows = json.slice(headerRowIdx+1).filter(function(r){
+      return r.some(function(c){ return String(c).trim()!==''; });
+    });
+    return {headers:headers, rows:rows};
+  }
+
+  function loadFile(file, kind){
+    readWorkbook(file, function(err, wb){
+      if(err){ showUploadError('ไม่สามารถอ่านไฟล์ได้: '+err.message); return; }
+      var sheetNames = wb.SheetNames;
+      var parsed = sheetToRows(wb, sheetNames[0]);
+      var obj = {
+        fileName: file.name,
+        workbook: wb,
+        sheetNames: sheetNames,
+        activeSheet: sheetNames[0],
+        headers: parsed.headers,
+        rows: parsed.rows
+      };
+      if(kind==='recall'){ state.recall = obj; renderDropInfo('Recall', obj); }
+      else { state.branch = obj; renderDropInfo('Branch', obj); }
+      maybeShowMapping();
+    });
+  }
+
+  function renderDropInfo(prefix, obj){
+    document.getElementById('name'+prefix).textContent = obj.fileName;
+    document.getElementById('stats'+prefix).textContent = obj.rows.length.toLocaleString('th-TH')+' แถว · '+obj.headers.length+' คอลัมน์'+(obj.sheetNames.length>1?' · '+obj.sheetNames.length+' ชีต':'');
+  }
+
+  function showUploadError(msg){
+    document.getElementById('uploadError').innerHTML = '<div class="error-box">'+msg+'</div>';
+  }
+
+  // ---------- mapping UI ----------
+  function fillSelect(sel, headers, guessIdx){
+    sel.innerHTML = '';
+    var optNone = document.createElement('option');
+    optNone.value = '-1'; optNone.textContent = '(ไม่ใช้)';
+    sel.appendChild(optNone);
+    headers.forEach(function(h, i){
+      var opt = document.createElement('option');
+      opt.value = i; opt.textContent = h;
+      sel.appendChild(opt);
+    });
+    sel.value = guessIdx>=0 ? String(guessIdx) : '-1';
+  }
+
+  function renderSheetPicker(containerId, obj, onChange){
+    var el = document.getElementById(containerId);
+    if(obj.sheetNames.length<=1){ el.innerHTML=''; return; }
+    el.innerHTML = 'ชีต: <select></select>';
+    var sel = el.querySelector('select');
+    obj.sheetNames.forEach(function(name){
+      var opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    });
+    sel.value = obj.activeSheet;
+    sel.addEventListener('change', function(){
+      obj.activeSheet = sel.value;
+      var parsed = sheetToRows(obj.workbook, sel.value);
+      obj.headers = parsed.headers;
+      obj.rows = parsed.rows;
+      onChange();
+    });
+  }
+
+  function maybeShowMapping(){
+    if(!state.recall || !state.branch) return;
+    document.getElementById('stepMap').style.display = '';
+    document.getElementById('bf2').classList.add('active');
+    document.getElementById('mapTitleRecall').textContent = 'ไฟล์เรียกคืน — ' + state.recall.fileName;
+    document.getElementById('mapTitleBranch').textContent = 'ไฟล์สาขา — ' + state.branch.fileName;
+    setupMappingForRecall();
+    setupMappingForBranch();
+    renderSheetPicker('sheetPickRecall', state.recall, setupMappingForRecall);
+    renderSheetPicker('sheetPickBranch', state.branch, setupMappingForBranch);
+    checkMatchReady();
+    document.getElementById('stepMap').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function setupMappingForRecall(){
+    var h = state.recall.headers;
+    fillSelect(document.getElementById('mapRecallCode'), h, guessColumn(h, CODE_HINTS));
+    fillSelect(document.getElementById('mapRecallName'), h, guessColumn(h, NAME_HINTS));
+    fillSelect(document.getElementById('mapRecallExp'), h, guessColumn(h, EXP_HINTS));
+    fillSelect(document.getElementById('mapRecallBatch'), h, guessColumn(h, BATCH_HINTS));
+    checkMatchReady();
+  }
+  function setupMappingForBranch(){
+    var h = state.branch.headers;
+    fillSelect(document.getElementById('mapBranchCode'), h, guessColumn(h, CODE_HINTS));
+    fillSelect(document.getElementById('mapBranchName'), h, guessColumn(h, NAME_HINTS));
+    fillSelect(document.getElementById('mapBranchExp'), h, guessColumn(h, EXP_HINTS));
+    fillSelect(document.getElementById('mapBranchQty'), h, guessColumn(h, QTY_HINTS));
+    checkMatchReady();
+  }
+
+  function checkMatchReady(){
+    var rc = document.getElementById('mapRecallCode').value;
+    var bc = document.getElementById('mapBranchCode').value;
+    var mm = document.querySelector('input[name=mm]:checked').value;
+    var re = document.getElementById('mapRecallExp').value;
+    var be = document.getElementById('mapBranchExp').value;
+    var ready = rc!=='-1' && bc!=='-1';
+    if(mm==='code_exp') ready = ready && re!=='-1' && be!=='-1';
+    document.getElementById('btnMatch').disabled = !ready;
+  }
+
+  ['mapRecallCode','mapRecallName','mapRecallExp','mapRecallBatch','mapBranchCode','mapBranchName','mapBranchExp','mapBranchQty'].forEach(function(id){
+    document.addEventListener('change', function(e){ if(e.target.id===id) checkMatchReady(); });
+  });
+  document.addEventListener('change', function(e){ if(e.target.name==='mm') checkMatchReady(); });
+
+  // ---------- matching ----------
+  function runMatch(){
+    var rc = parseInt(document.getElementById('mapRecallCode').value,10);
+    var rn = parseInt(document.getElementById('mapRecallName').value,10);
+    var re = parseInt(document.getElementById('mapRecallExp').value,10);
+    var rb = parseInt(document.getElementById('mapRecallBatch').value,10);
+    var bc = parseInt(document.getElementById('mapBranchCode').value,10);
+    var bn = parseInt(document.getElementById('mapBranchName').value,10);
+    var be = parseInt(document.getElementById('mapBranchExp').value,10);
+    var bq = parseInt(document.getElementById('mapBranchQty').value,10);
+    var mode = document.querySelector('input[name=mm]:checked').value;
+
+    if(rc<0 || bc<0){ document.getElementById('matchError').innerHTML='<div class="error-box">กรุณาเลือกคอลัมน์รหัสสินค้าทั้งสองไฟล์</div>'; return; }
+    document.getElementById('matchError').innerHTML = '';
+
+    // index branch rows by normalized code
+    var branchByCode = {};
+    state.branch.rows.forEach(function(row){
+      var code = normCode(row[bc]);
+      if(!code) return;
+      if(!branchByCode[code]) branchByCode[code] = [];
+      branchByCode[code].push(row);
+    });
+
+    var results = [];
+    state.recall.rows.forEach(function(row){
+      var code = normCode(row[rc]);
+      if(!code) return;
+      var name = rn>=0 ? row[rn] : '';
+      var expRaw = re>=0 ? row[re] : '';
+      var expDate = re>=0 ? parseDateValue(expRaw) : null;
+      var batch = rb>=0 ? row[rb] : '';
+
+      var candidates = branchByCode[code] || [];
+      var matchedRows = [];
+      candidates.forEach(function(brow){
+        if(mode==='code_exp'){
+          var bExpDate = parseDateValue(brow[be]);
+          if(expDate && bExpDate && sameDate(expDate,bExpDate)){
+            matchedRows.push(brow);
+          }
+        } else {
+          matchedRows.push(brow);
+        }
+      });
+
+      if(matchedRows.length===0){
+        results.push({
+          code: row[rc], name:name, recallExp: expDate, recallExpRaw: expRaw, batch: batch,
+          matched:false, branchName:'', branchExp:null, branchQty:'', status:'unmatched'
+        });
+      } else {
+        matchedRows.forEach(function(brow){
+          var bExpDate = be>=0 ? parseDateValue(brow[be]) : null;
+          var d = daysUntil(bExpDate);
+          var status = 'ok';
+          if(d!==null){
+            if(d<0) status='expired';
+            else if(d<=60) status='soon';
+          }
+          results.push({
+            code: row[rc], name:name, recallExp: expDate, recallExpRaw: expRaw, batch: batch,
+            matched:true, branchName: bn>=0?brow[bn]:'', branchExp: bExpDate, branchQty: bq>=0?brow[bq]:'', status: status
+          });
+        });
+      }
+    });
+
+    state.matches = results;
+    renderResults();
+  }
+
+  function sameDate(a,b){
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+
+  // ---------- results rendering ----------
+  function renderResults(){
+    document.getElementById('stepResults').style.display = '';
+    document.getElementById('bf3').classList.add('active');
+
+    var total = state.matches.length;
+    var matched = state.matches.filter(function(r){return r.matched;}).length;
+    var expired = state.matches.filter(function(r){return r.status==='expired';}).length;
+    var soon = state.matches.filter(function(r){return r.status==='soon';}).length;
+    var unmatched = state.matches.filter(function(r){return !r.matched;}).length;
+
+    document.getElementById('statBoxes').innerHTML =
+      stat('match', matched, 'พบในสต็อกสาขา') +
+      stat('expired', expired, 'หมดอายุแล้ว') +
+      stat('soon', soon, 'ใกล้หมดอายุ ≤60 วัน') +
+      stat('miss', unmatched, 'ไม่พบในสาขา');
+
+    buildTable();
+    document.getElementById('stepResults').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function stat(cls, n, label){
+    return '<div class="stat '+cls+'"><div class="n">'+n.toLocaleString('th-TH')+'</div><div class="l">'+label+'</div></div>';
+  }
+
+  function buildTable(){
+    var head = document.getElementById('resultsHead');
+    head.innerHTML = '<th>สถานะ</th><th>รหัสสินค้า</th><th>ชื่อสินค้า (เรียกคืน)</th><th>EXP เรียกคืน</th><th>ล็อต</th><th>ชื่อในสาขา</th><th>EXP สาขา</th><th>จำนวน</th><th>คงเหลือ (วัน)</th>';
+
+    var body = document.getElementById('resultsBody');
+    var rows = filteredRows();
+    if(rows.length===0){
+      body.innerHTML = '<tr><td colspan="9"><div class="empty">ไม่มีรายการที่ตรงเงื่อนไข</div></td></tr>';
+      return;
+    }
+    var html = rows.map(function(r){
+      var pill, bar;
+      if(!r.matched){ pill='<span class="pill" style="background:var(--surface-2);color:var(--muted)">ไม่พบ</span>'; bar='var(--border)'; }
+      else if(r.status==='expired'){ pill='<span class="pill expired">หมดอายุแล้ว</span>'; bar='var(--danger)'; }
+      else if(r.status==='soon'){ pill='<span class="pill soon">ใกล้หมดอายุ</span>'; bar='var(--warn)'; }
+      else { pill='<span class="pill ok">ปกติ</span>'; bar='var(--success)'; }
+
+      var d = r.branchExp ? daysUntil(r.branchExp) : null;
+      return '<tr>'+
+        '<td><span class="rowbar" style="background:'+bar+'"></span>'+pill+'</td>'+
+        '<td class="code">'+escapeHtml(r.code)+'</td>'+
+        '<td>'+escapeHtml(r.name)+'</td>'+
+        '<td class="code">'+(r.recallExp?fmtDate(r.recallExp):escapeHtml(String(r.recallExpRaw||'—')))+'</td>'+
+        '<td class="code">'+escapeHtml(r.batch)+'</td>'+
+        '<td>'+escapeHtml(r.branchName)+'</td>'+
+        '<td class="code">'+(r.branchExp?fmtDate(r.branchExp):'—')+'</td>'+
+        '<td class="code">'+escapeHtml(String(r.branchQty||''))+'</td>'+
+        '<td class="code">'+(d!==null?d.toLocaleString('th-TH'):'—')+'</td>'+
+        '</tr>';
+    }).join('');
+    body.innerHTML = html;
+  }
+
+  function escapeHtml(s){
+    return String(s===undefined||s===null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function filteredRows(){
+    var q = state.search.trim().toLowerCase();
+    return state.matches.filter(function(r){
+      if(state.filter==='matched' && !r.matched) return false;
+      if(state.filter==='unmatched' && r.matched) return false;
+      if(state.filter==='expired' && r.status!=='expired') return false;
+      if(state.filter==='soon' && r.status!=='soon') return false;
+      if(q){
+        var hay = (String(r.code)+' '+String(r.name)+' '+String(r.branchName)).toLowerCase();
+        if(hay.indexOf(q)===-1) return false;
+      }
+      return true;
+    });
+  }
+
+  // ---------- export ----------
+  function exportResults(){
+    var rows = filteredRows().map(function(r){
+      return {
+        'สถานะ': r.matched ? (r.status==='expired'?'หมดอายุแล้ว':r.status==='soon'?'ใกล้หมดอายุ':'ปกติ') : 'ไม่พบในสาขา',
+        'รหัสสินค้า': r.code,
+        'ชื่อสินค้า (เรียกคืน)': r.name,
+        'EXP เรียกคืน': r.recallExp ? fmtDate(r.recallExp) : (r.recallExpRaw||''),
+        'เลขล็อต': r.batch,
+        'ชื่อในสาขา': r.branchName,
+        'EXP สาขา': r.branchExp ? fmtDate(r.branchExp) : '',
+        'จำนวน': r.branchQty,
+        'คงเหลือ (วัน)': r.branchExp ? daysUntil(r.branchExp) : ''
+      };
+    });
+    var ws = XLSX.utils.json_to_sheet(rows);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ผลการจับคู่');
+    var stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, 'ผลจับคู่สินค้าเรียกคืน_'+stamp+'.xlsx');
+  }
+
+  // ---------- wiring ----------
+  function wireDrop(dropId, inputId, kind){
+    var drop = document.getElementById(dropId);
+    var input = document.getElementById(inputId);
+    drop.addEventListener('click', function(){ input.click(); });
+    input.addEventListener('change', function(){
+      if(input.files && input.files[0]) loadFile(input.files[0], kind);
+    });
+    ['dragenter','dragover'].forEach(function(evt){
+      drop.addEventListener(evt, function(e){ e.preventDefault(); drop.classList.add('drag'); });
+    });
+    ['dragleave','drop'].forEach(function(evt){
+      drop.addEventListener(evt, function(e){ e.preventDefault(); drop.classList.remove('drag'); });
+    });
+    drop.addEventListener('drop', function(e){
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(f) loadFile(f, kind);
+    });
+  }
+  wireDrop('dropRecall','fileRecall','recall');
+  wireDrop('dropBranch','fileBranch','branch');
+
+  document.getElementById('btnMatch').addEventListener('click', runMatch);
+  document.getElementById('btnExport').addEventListener('click', exportResults);
+  document.getElementById('btnReset').addEventListener('click', function(){ location.reload(); });
+
+  document.getElementById('searchBox').addEventListener('input', function(e){
+    state.search = e.target.value; buildTable();
+  });
+  document.getElementById('filterChips').addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#filterChips .chip').forEach(function(c){ c.classList.remove('on'); });
+    chip.classList.add('on');
+    state.filter = chip.getAttribute('data-f');
+    buildTable();
+  });
+
+})();
+</script>
